@@ -1,0 +1,245 @@
+---
+title: "DH_BIO720_DEC5"
+output: md_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Q2. 
+
+```{r}
+
+diploid_selection <- function(p_0 = 0.4 ,q_0 = 0.6 ,w_aa = 0.9, w_AA = 1.1 , w_Aa = 0.9, n = 100) {
+  generations <- 1:n
+  p <- rep(NA,n)  # a vector to store allele frequencies
+  q <- rep(NA,n) 
+  w_bar <- rep(NA, n)
+    
+  p[1] <- p_0
+  q[1]<- q_0
+  
+  
+  for ( i in 1:(n-1)) {
+		
+		w_bar[i] <- p[i]^2 * w_AA + 2*p[i]*q[i]* w_Aa + q[i]^2 * w_aa
+    p[i + 1] <- p[i]^2 * (w_AA / w_bar[i]) + p[i] * q[i] * (w_Aa / w_bar[i] )
+    q[i +1] <- 1 - p[i+1]
+    
+  }
+  
+plot( generations, p, xlab = "Generation", ylab = "Allele Frequency" , pch = 20)
+
+return(p) 
+
+}  
+
+```
+
+
+Q3. 
+
+```{r}
+
+genetic_drift <- function (A_0=0.5, a_0 =0.5, indiv = 200, n = 100 ){ 
+  size <- 2 * indiv
+  A <- rep(NA, n)
+  a <- rep(NA, n)
+
+  A[1] <- A_0
+  a[1] <- A_0
+  
+  
+  for ( i in 1:(n-1)) {
+  allele_counts <- sample(c("Allele1", "Allele2"), size, replace = TRUE, prob = c(A[i], a[i]))
+  table <- table(allele_counts)
+  table <- data.frame(table)
+  rownames(table) <- table[,1]
+  A[i +1] <- table["Allele1", 2] / size 
+  a[i + 1] <- table["Allele2", 2] / size 
+  
+
+  }
+
+  
+generations <- 1:length(A)
+plot(A ~ generations, pch = 20, type = "l", 
+     ylab = "Allele frequency of Allele 1", 
+     xlab = "Generation")
+
+generations <- 1:length(a)
+plot(a ~ generations, pch = 20, type = "l", 
+     ylab = "Allele frequency of Allele 2", 
+     xlab = "Generation")
+}
+
+genetic_drift()
+
+```
+
+Q4.
+
+```{r}
+
+genetic_drift2 <- function( freq= 0.5, indiv = 200, n = 100, sims = 1000) {
+  
+ A <- rep(NA, sims)
+  
+
+  for(t in 1:sims){
+    
+    p <- freq
+    
+  
+    for ( i in 1:n) {
+  allele_counts <- sample(c("Allele1", "Allele2"), indiv * 2, replace = TRUE, prob = c( p, 1 - p))
+  p <- length(allele_counts[allele_counts == "Allele1"]) / length(allele_counts)
+ 
+  
+    }
+ 
+ A[t] <- p
+ 
+  }
+ 
+ 
+ 
+lost_freq <- A[A == 0]
+lost_freq<- length(lost_freq) / 1000
+lost_freq 
+
+}
+genetic_drift2()
+genetic_drift2( freq = 0.25)
+genetic_drift2( freq = 0.1)
+
+
+```
+
+
+
+Q5. 
+```{r}
+
+plot( 0, 0, xlim= c(0, 100), ylim = c( 0,1), type = "n", xlab = "Generation", ylab ="Allele Frequency")
+
+genetic_drift_test <- function (A_0=0.5, a_0 =0.5, indiv = 200, n = 100 ){ 
+  size <- 2 * indiv
+  A <- rep(NA, n)
+  a <- rep(NA, n)
+
+  A[1] <- A_0
+  a[1] <- A_0
+  
+  
+  for ( i in 1:(n-1)) {
+  allele_counts <- sample(c("Allele1", "Allele2"), size, replace = TRUE, prob = c(A[i], a[i]))
+  table <- table(allele_counts)
+  table <- data.frame(table)
+  rownames(table) <- table[,1]
+  A[i +1] <- table["Allele1", 2] / size 
+  a[i + 1] <- table["Allele2", 2] / size 
+  
+
+  }
+
+  
+generations <- 1:length(A)
+lines(A ~ generations, pch = 20, type = "l")
+
+}
+
+replicate(100,genetic_drift_test())
+
+```
+
+
+
+6. 
+```{r}
+
+ #intercept, slope, sample size(number of observations, residual standard error ( stochastic variation))
+stat_pwr <- function (sample_size = 20, intercept = 0.5, slope = 0.1, sd = 2 ){
+  length.out <- sample_size 
+  
+x <- seq(from =1, to = 10, length.out =  20) 
+intercept <- 0.5  
+slope <- 0.1 
+
+y_deterministic <- intercept + slope*x
+
+y_simulated <- rnorm(length(x), mean = y_deterministic, sd = 2)
+
+mod_sim <- lm(y_simulated ~ x)
+p_val_slope <- summary(mod_sim)$coef[2,4]
+p_val_slope
+
+}
+
+```
+
+```{r}
+#confirm it is doing the same thing 
+
+set.seed(720)
+stat_pwr()
+stat_pwr()
+
+set.seed(720)
+x <- seq(from =1, to = 10, length.out =  20) 
+intercept <- 0.5  
+slope <- 0.1 
+ 
+ y_deterministic <- intercept + slope*x
+ 
+ y_simulated <- rnorm(length(x), mean = y_deterministic, sd = 2)
+ 
+ mod_sim <- lm(y_simulated ~ x)
+ p_val_slope <- summary(mod_sim)$coef[2,4]
+ p_val_slope
+ 
+x <- seq(from =1, to = 10, length.out =  20) 
+intercept <- 0.5  
+slope <- 0.1 
+ 
+ y_deterministic <- intercept + slope*x
+ 
+ y_simulated <- rnorm(length(x), mean = y_deterministic, sd = 2)
+ 
+ mod_sim <- lm(y_simulated ~ x)
+ p_val_slope <- summary(mod_sim)$coef[2,4]
+ p_val_slope
+
+```
+
+```{r}
+#run 100 times and generate histogram of p values 
+ 
+ P_value  <- (replicate(100, stat_pwr()))
+ hist(P_value )
+ 
+ #what proportion of times is P value less than 0.05
+ 
+ rep_proportion <- P_value[P_value < 0.05]
+ rep_proportion <- length(rep_proportion) / 100
+ rep_proportion
+```
+
+```{r}
+
+#redo above but with slope at 0
+
+P_value <- (replicate(100, stat_pwr(slope = 0)))
+hist(P_value)
+
+rep_proportion <- P_value[P_value < 0.05]
+ rep_proportion <- length(rep_proportion) / 100
+ rep_proportion
+
+
+```
+More p-values that are lower. 
+
+
+
